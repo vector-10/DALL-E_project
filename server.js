@@ -2,30 +2,40 @@ require("dotenv").config();
 const express = require("express");
 const app = express();
 const bodyParser = require("body-parser");
+const Openai = require("openai");
 
-const { Configuration, OpenAIApi } = require("openai");
+//middleware
+app.use(bodyParser.json());
+app.use(function (req, res, next) {
+  res.header("Access-Control-Allow-Origin", "http://localhost:5173");
+  res.header("Access-Control-Allow-Credentials", true);
+  res.header(
+    "Access-Control-Allow-Headers",
+    "Origin, X-Requested-with, Content-Type, Accept"
+  );
+});
 
-const configuration = new Configuration({
+const openai = new Openai({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
-const openai = new OpenAIApi(configuration);
-
-app.post("/", async (req, res) => {
+const main = async (req, res) => {
   try {
-    const response = await openai.createImage({
+    const response = await openai.images.generate({
       prompt: "a flying astronaut",
       n: 1,
       size: "256x256",
     });
 
-    const imageUrl = response.data.data[0].url;
-    res.json({ data: imageUrl });
+    const image_url = response.data.data[0].url;
+    res.json({ data: image_url });
   } catch (error) {
+    // res.status(500).json({ error: "An error occurred" });
     console.error("Error creating image:", error.message);
-    res.status(500).json({ error: "An error occurred" });
   }
-});
+};
+
+main();
 
 const PORT = process.env.PORT || 4500;
 
